@@ -1,4 +1,14 @@
 import {
+  lazy,
+  Suspense,
+} from "react";
+
+import {
+  Box,
+  CircularProgress,
+} from "@mui/material";
+
+import {
   BrowserRouter,
   Routes,
   Route,
@@ -6,38 +16,66 @@ import {
 
 import Layout from "./components/Layout";
 
-import Home from "./pages/Home";
-import EventList from "./pages/EventList";
-import EventForm from "./pages/EventForm";
+
+const Home =
+  lazy(() => import("./pages/Home"));
+
+const EventList =
+  lazy(() => import("./pages/EventList"));
+
+const EventForm =
+  lazy(() => import("./pages/EventForm"));
+
+
+function PageLoading() {
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "center",
+        py: 6,
+      }}
+    >
+      <CircularProgress />
+    </Box>
+  );
+}
 
 
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-
-        <Route
-          element={<Layout />}
-        >
+      <Suspense fallback={<PageLoading />}>
+        <Routes>
 
           <Route
-            path="/"
-            element={<Home />}
-          />
+            element={<Layout />}
+          >
 
-          <Route
-            path="/events"
-            element={<EventList />}
-          />
+            <Route
+              path="/"
+              element={<Home />}
+            />
 
-          <Route
-            path="/events/new"
-            element={<EventForm />}
-          />
+            <Route
+              path="/events"
+              element={<EventList />}
+            />
 
-        </Route>
+            <Route
+              path="/events/new"
+              element={<EventForm />}
+            />
 
-      </Routes>
+            <Route
+              path="/events/:id/edit"
+              element={<EventForm />}
+            />
+
+          </Route>
+
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

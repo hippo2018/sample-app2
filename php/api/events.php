@@ -25,6 +25,55 @@ $method = $_SERVER['REQUEST_METHOD'];
 // GET
 if ($method === 'GET') {
 
+    $id = (int)(
+        $_GET['id'] ?? 0
+    );
+
+
+    if ($id > 0) {
+
+        $stmt = $db->prepare(
+            "
+            SELECT
+                id,
+                title,
+                date,
+                description
+            FROM events
+            WHERE id = :id
+            "
+        );
+
+
+        $stmt->execute([
+            ':id' => $id
+        ]);
+
+
+        $event = $stmt->fetch();
+
+
+        if (!$event) {
+
+            http_response_code(404);
+
+            echo json_encode([
+                'message' => '予定が見つかりません'
+            ], JSON_UNESCAPED_UNICODE);
+
+            exit;
+        }
+
+
+        echo json_encode(
+            $event,
+            JSON_UNESCAPED_UNICODE
+        );
+
+        exit;
+    }
+
+
     $stmt = $db->query(
         "
         SELECT
@@ -143,6 +192,131 @@ if ($method === 'POST') {
 
 
     http_response_code(201);
+
+    echo json_encode(
+        $event,
+        JSON_UNESCAPED_UNICODE
+    );
+
+    exit;
+}
+
+
+// PUT
+if ($method === 'PUT') {
+
+    $id = (int)(
+        $_GET['id'] ?? 0
+    );
+
+
+    if ($id <= 0) {
+
+        http_response_code(400);
+
+        echo json_encode([
+            'message' => 'IDが不正です'
+        ], JSON_UNESCAPED_UNICODE);
+
+        exit;
+    }
+
+
+    $input = json_decode(
+        file_get_contents('php://input'),
+        true
+    );
+
+    $title = trim(
+        $input['title'] ?? ''
+    );
+
+    $date = trim(
+        $input['date'] ?? ''
+    );
+
+    $description = trim(
+        $input['description'] ?? ''
+    );
+
+
+    if ($title === '') {
+
+        http_response_code(400);
+
+        echo json_encode([
+            'message' => 'タイトルを入力してください'
+        ], JSON_UNESCAPED_UNICODE);
+
+        exit;
+    }
+
+
+    if ($date === '') {
+
+        http_response_code(400);
+
+        echo json_encode([
+            'message' => '日付を入力してください'
+        ], JSON_UNESCAPED_UNICODE);
+
+        exit;
+    }
+
+
+    $stmt = $db->prepare(
+        "
+        UPDATE events
+        SET
+            title = :title,
+            date = :date,
+            description = :description,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = :id
+        "
+    );
+
+
+    $stmt->execute([
+        ':id' => $id,
+        ':title' => $title,
+        ':date' => $date,
+        ':description' => $description,
+    ]);
+
+
+    if ($stmt->rowCount() === 0) {
+
+        http_response_code(404);
+
+        echo json_encode([
+            'message' => '予定が見つかりません'
+        ], JSON_UNESCAPED_UNICODE);
+
+        exit;
+    }
+
+
+    $stmt = $db->prepare(
+        "
+        SELECT
+            id,
+            title,
+            date,
+            description
+        FROM events
+        WHERE id = :id
+        "
+    );
+
+
+    $stmt->execute([
+        ':id' => $id
+    ]);
+
+
+    $event = $stmt->fetch();
+
 
     echo json_encode(
         $event,

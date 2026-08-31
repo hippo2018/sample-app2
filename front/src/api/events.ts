@@ -4,7 +4,7 @@ import type {
 } from "../types/event";
 
 const API_URL =
-  "http://localhost/sample-app/php/api/events.php";
+  "http://localhost/sample-app2/php/api/events.php";
 
 
 // --------------------------------

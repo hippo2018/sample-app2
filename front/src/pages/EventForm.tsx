@@ -118,10 +118,18 @@ export default function EventForm() {
     Number(id);
 
 
+  const isValidEventId =
+    Number.isInteger(eventId) &&
+    eventId > 0;
+
+
   // 状態
 
   const [loading, setLoading] =
-    useState(isEdit);
+    useState(
+      isEdit &&
+      isValidEventId
+    );
 
   const [saving, setSaving] =
     useState(false);
@@ -175,11 +183,8 @@ export default function EventForm() {
 
     if (
       !isEdit ||
-      !Number.isInteger(eventId) ||
-      eventId <= 0
+      !isValidEventId
     ) {
-
-      setLoading(false);
 
       return;
 
@@ -241,6 +246,7 @@ export default function EventForm() {
   }, [
     eventId,
     isEdit,
+    isValidEventId,
     reset,
   ]);
 
@@ -460,6 +466,23 @@ export default function EventForm() {
               gap: 3,
             }}
           >
+
+
+            {/* タイトル */}
+
+            <TextField
+              label="タイトル"
+              fullWidth
+              {...register("title")}
+              error={
+                !!errors.title
+              }
+              helperText={
+                errors.title?.message ??
+                "50文字以内"
+              }
+              disabled={saving}
+            />
 
 
             {/* 日付 */}
