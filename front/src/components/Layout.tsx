@@ -3,209 +3,109 @@ import {
 } from "react";
 
 import {
-  AppBar,
-  Box,
-  Drawer,
-  IconButton,
-  List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Toolbar,
-  Typography,
-} from "@mui/material";
-
-import {
-  Add,
-  CalendarMonth,
-  Home as HomeIcon,
-  Menu,
-} from "@mui/icons-material";
-
-import {
-  Link,
+  NavLink,
   Outlet,
-  useLocation,
 } from "react-router-dom";
 
-const drawerWidth = 240;
+const menuItems = [
+  {
+    text: "ホーム",
+    path: "/",
+    icon: "⌂",
+  },
+  {
+    text: "予定一覧",
+    path: "/events",
+    icon: "□",
+  },
+  {
+    text: "予定登録",
+    path: "/events/new",
+    icon: "+",
+  },
+];
 
 export default function Layout() {
-  const location = useLocation();
-
   const [mobileOpen, setMobileOpen] =
     useState(false);
 
-  const handleDrawerToggle = () => {
-    setMobileOpen(
-      (current) => !current
-    );
-  };
-
-  const handleMobileDrawerClose = () => {
+  const closeMobileMenu = () => {
     setMobileOpen(false);
   };
 
-  const menuItems = [
-    {
-      text: "ホーム",
-      path: "/",
-      icon: <HomeIcon />,
-    },
-    {
-      text: "予定一覧",
-      path: "/events",
-      icon: <CalendarMonth />,
-    },
-    {
-      text: "予定登録",
-      path: "/events/new",
-      icon: <Add />,
-    },
-  ];
-
-  const drawerContent = (
-    <>
-      <Toolbar />
-
-      <List>
-        {menuItems.map((item) => (
-          <ListItemButton
-            key={item.path}
-            component={Link}
-            to={item.path}
-            selected={
-              location.pathname ===
-              item.path
-            }
-            onClick={handleMobileDrawerClose}
+  const navigation = (
+    <nav
+      className="side-menu"
+      aria-label="メインメニュー"
+    >
+      {menuItems.map((item) => (
+        <NavLink
+          key={item.path}
+          to={item.path}
+          end={item.path === "/"}
+          className={({ isActive }) =>
+            isActive
+              ? "side-menu__item is-active"
+              : "side-menu__item"
+          }
+          onClick={closeMobileMenu}
+        >
+          <span
+            className="side-menu__icon"
+            aria-hidden="true"
           >
-            <ListItemIcon>
-              {item.icon}
-            </ListItemIcon>
-
-            <ListItemText
-              primary={item.text}
-            />
-          </ListItemButton>
-        ))}
-      </List>
-    </>
+            {item.icon}
+          </span>
+          <span>{item.text}</span>
+        </NavLink>
+      ))}
+    </nav>
   );
 
   return (
-    <Box sx={{ display: "flex" }}>
-      <AppBar
-        position="fixed"
-        sx={{
-          zIndex: (theme) =>
-            theme.zIndex.drawer + 1,
-
-          width: {
-            md: `calc(100% - ${drawerWidth}px)`,
-          },
-
-          ml: {
-            md: `${drawerWidth}px`,
-          },
-        }}
-      >
-        <Toolbar
-          sx={{
-            gap: 1,
-          }}
+    <div className="app-shell">
+      <header className="top-bar">
+        <button
+          type="button"
+          className="icon-button top-bar__menu"
+          aria-label="メニューを開く"
+          aria-expanded={mobileOpen}
+          onClick={() =>
+            setMobileOpen(
+              (current) => !current
+            )
+          }
         >
-          <IconButton
-            color="inherit"
-            edge="start"
-            aria-label="メニューを開く"
-            onClick={handleDrawerToggle}
-            sx={{
-              display: {
-                xs: "inline-flex",
-                md: "none",
-              },
-            }}
-          >
-            <Menu />
-          </IconButton>
+          <span aria-hidden="true">☰</span>
+        </button>
 
-          <Typography
-            variant="h6"
-            noWrap
-          >
-            予定管理
-          </Typography>
-        </Toolbar>
-      </AppBar>
+        <h1 className="top-bar__title">
+          予定管理
+        </h1>
+      </header>
 
-      <Box
-        component="nav"
-        sx={{
-          width: drawerWidth,
-          flexShrink: 0,
-          display: {
-            xs: "none",
-            md: "block",
-          },
-        }}
-      >
-        <Drawer
-          variant="permanent"
-          open
-          sx={{
-            "& .MuiDrawer-paper": {
-              width: drawerWidth,
-              boxSizing: "border-box",
-            },
-          }}
-        >
-          {drawerContent}
-        </Drawer>
-      </Box>
+      <aside className="desktop-sidebar">
+        {navigation}
+      </aside>
 
-      <Drawer
-        variant="temporary"
-        open={mobileOpen}
-        onClose={handleDrawerToggle}
-        ModalProps={{
-          keepMounted: true,
-        }}
-        sx={{
-          display: {
-            xs: "block",
-            md: "none",
-          },
+      {mobileOpen && (
+        <div className="mobile-drawer">
+          <button
+            type="button"
+            className="mobile-drawer__backdrop"
+            aria-label="メニューを閉じる"
+            onClick={closeMobileMenu}
+          />
 
-          "& .MuiDrawer-paper": {
-            width: drawerWidth,
-            boxSizing: "border-box",
-          },
-        }}
-      >
-        {drawerContent}
-      </Drawer>
+          <aside className="mobile-drawer__panel">
+            {navigation}
+          </aside>
+        </div>
+      )}
 
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          p: {
-            xs: 2,
-            sm: 3,
-          },
-          bgcolor: "#f5f5f5",
-          minHeight: "100vh",
-          width: {
-            xs: "100%",
-            md: `calc(100% - ${drawerWidth}px)`,
-          },
-        }}
-      >
-        <Toolbar />
-
+      <main className="main-content">
         <Outlet />
-      </Box>
-    </Box>
+      </main>
+    </div>
   );
 }

@@ -4,21 +4,6 @@ import {
 } from "react";
 
 import {
-  Alert,
-  Box,
-  Button,
-  CircularProgress,
-  Paper,
-  TextField,
-  Typography,
-} from "@mui/material";
-
-import {
-  ArrowBack,
-  Save,
-} from "@mui/icons-material";
-
-import {
   useNavigate,
   useParams,
 } from "react-router-dom";
@@ -49,13 +34,7 @@ import type {
   EventInput,
 } from "../types/event";
 
-
-// ------------------------------
-// Zod スキーマ
-// ------------------------------
-
 const eventSchema = z.object({
-
   title: z
     .string()
     .trim()
@@ -85,45 +64,27 @@ const eventSchema = z.object({
       200,
       "説明は200文字以内で入力してください。"
     ),
-
 });
-
-
-// Zodから型を自動生成
 
 type EventFormData =
   z.infer<typeof eventSchema>;
 
-
-// ------------------------------
-// コンポーネント
-// ------------------------------
-
 export default function EventForm() {
-
   const navigate =
     useNavigate();
 
   const { id } =
     useParams();
 
-
-  // 編集モードかどうか
-
   const isEdit =
     Boolean(id);
-
 
   const eventId =
     Number(id);
 
-
   const isValidEventId =
     Number.isInteger(eventId) &&
     eventId > 0;
-
-
-  // 状態
 
   const [loading, setLoading] =
     useState(
@@ -140,11 +101,6 @@ export default function EventForm() {
   const [saveError, setSaveError] =
     useState("");
 
-
-  // ------------------------------
-  // React Hook Form
-  // ------------------------------
-
   const {
     register,
     reset,
@@ -153,96 +109,58 @@ export default function EventForm() {
       errors,
     },
   } = useForm<EventFormData>({
-
     resolver:
       zodResolver(eventSchema),
 
     defaultValues: {
-
       title: "",
-
       date: format(
         new Date(),
         "yyyy-MM-dd"
       ),
-
       description: "",
-
     },
-
   });
 
-
-  // ------------------------------
-  // 編集データ取得
-  // ------------------------------
-
   useEffect(() => {
-
-    // 新規登録なら何もしない
-
     if (
       !isEdit ||
       !isValidEventId
     ) {
-
       return;
-
     }
-
 
     const loadEvent =
       async () => {
-
         setLoading(true);
-
         setLoadError("");
 
-
         try {
-
           const event =
             await getEvent(
               eventId
             );
 
-
-          // フォームへセット
-
           reset({
-
             title:
               event.title,
-
             date:
               event.date,
-
             description:
               event.description,
-
           });
-
         } catch (err) {
-
           setLoadError(
-
             err instanceof Error
               ? err.message
               : "予定の取得に失敗しました。"
-
           );
-
         } finally {
-
           setLoading(false);
-
         }
-
       };
 
-
     void loadEvent();
-
   }, [
     eventId,
     isEdit,
@@ -250,307 +168,182 @@ export default function EventForm() {
     reset,
   ]);
 
-
-  // ------------------------------
-  // 登録・更新
-  // ------------------------------
-
   const onSubmit =
     async (
       data: EventFormData
     ) => {
-
       setSaving(true);
-
       setSaveError("");
 
-
       try {
-
         const input: EventInput = {
-
           title:
             data.title.trim(),
-
           date:
             data.date,
-
           description:
             data.description.trim(),
-
         };
 
-
-        // 編集
-
         if (isEdit) {
-
           await updateEvent(
             eventId,
             input
           );
-
-        }
-
-        // 新規登録
-
-        else {
-
+        } else {
           await createEvent(
             input
           );
-
         }
 
-
-        // 一覧へ戻る
-
         navigate("/events");
-
       } catch (err) {
-
         setSaveError(
-
           err instanceof Error
             ? err.message
             : "保存に失敗しました。"
-
         );
-
       } finally {
-
         setSaving(false);
-
       }
-
     };
 
-
-  // ------------------------------
-  // 読み込み中
-  // ------------------------------
-
   if (loading) {
-
     return (
-
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          py: 6,
-        }}
-      >
-
-        <CircularProgress />
-
-      </Box>
-
+      <div className="loading">
+        <span className="spinner" />
+      </div>
     );
-
   }
-
-
-  // ------------------------------
-  // 読み込みエラー
-  // ------------------------------
 
   if (loadError) {
-
     return (
-
       <>
-
-        <Alert
-          severity="error"
-          sx={{ mb: 2 }}
-        >
+        <div className="alert alert--error">
           {loadError}
-        </Alert>
+        </div>
 
-
-        <Button
-          startIcon={<ArrowBack />}
+        <button
+          type="button"
+          className="button button--secondary"
           onClick={() =>
             navigate("/events")
           }
         >
+          <span aria-hidden="true">←</span>
           予定一覧へ戻る
-        </Button>
-
+        </button>
       </>
-
     );
-
   }
 
-
-  // ------------------------------
-  // 画面
-  // ------------------------------
-
   return (
-
-    <Box>
-
-      {/* タイトル */}
-
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 1,
-          mb: 3,
-        }}
-      >
-
-        <Button
-          startIcon={<ArrowBack />}
+    <>
+      <div className="page-header page-header--inline">
+        <button
+          type="button"
+          className="button button--secondary"
           onClick={() =>
             navigate("/events")
           }
         >
+          <span aria-hidden="true">←</span>
           戻る
-        </Button>
+        </button>
 
-
-        <Typography variant="h4">
+        <h2>
           {isEdit
             ? "予定編集"
             : "予定登録"}
-        </Typography>
+        </h2>
+      </div>
 
-      </Box>
-
-
-      {/* フォーム */}
-
-      <Paper
-        sx={{
-          p: {
-            xs: 2,
-            md: 3,
-          },
-
-          maxWidth: 700,
-        }}
-      >
-
-        {/* 保存エラー */}
-
+      <section className="form-panel">
         {saveError && (
-
-          <Alert
-            severity="error"
-            sx={{ mb: 2 }}
-          >
+          <div className="alert alert--error">
             {saveError}
-          </Alert>
-
+          </div>
         )}
 
-
         <form
+          className="event-form"
           onSubmit={
             handleSubmit(
               onSubmit
             )
           }
         >
-
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 3,
-            }}
-          >
-
-
-            {/* タイトル */}
-
-            <TextField
-              label="タイトル"
-              fullWidth
+          <label className="field">
+            <span className="field__label">
+              タイトル
+            </span>
+            <input
+              type="text"
               {...register("title")}
-              error={
-                !!errors.title
-              }
-              helperText={
-                errors.title?.message ??
-                "50文字以内"
-              }
               disabled={saving}
+              aria-invalid={
+                Boolean(errors.title)
+              }
             />
+            <span className="field__hint">
+              {errors.title?.message ??
+                "50文字以内"}
+            </span>
+          </label>
 
-
-            {/* 日付 */}
-
-            <TextField
-              label="日付"
+          <label className="field">
+            <span className="field__label">
+              日付
+            </span>
+            <input
               type="date"
-              fullWidth
               {...register("date")}
-              error={
-                !!errors.date
-              }
-              helperText={
-                errors.date?.message
-              }
               disabled={saving}
-              slotProps={{
-                inputLabel: {
-                  shrink: true,
-                },
-              }}
+              aria-invalid={
+                Boolean(errors.date)
+              }
             />
+            {errors.date?.message && (
+              <span className="field__hint">
+                {errors.date.message}
+              </span>
+            )}
+          </label>
 
-
-            {/* 説明 */}
-
-            <TextField
-              label="説明"
-              multiline
+          <label className="field">
+            <span className="field__label">
+              説明
+            </span>
+            <textarea
               rows={5}
-              fullWidth
               {...register(
                 "description"
               )}
-              error={
-                !!errors.description
-              }
-              helperText={
-                errors.description?.message ??
-                "200文字以内"
-              }
               disabled={saving}
+              aria-invalid={
+                Boolean(errors.description)
+              }
             />
+            <span className="field__hint">
+              {errors.description?.message ??
+                "200文字以内"}
+            </span>
+          </label>
 
-
-            {/* 保存 */}
-
-            <Button
-              type="submit"
-              variant="contained"
-              size="large"
-              startIcon={<Save />}
-              disabled={saving}
-            >
-              {saving
-                ? "保存中..."
-                : isEdit
-                  ? "更新"
-                  : "登録"}
-            </Button>
-
-          </Box>
-
+          <button
+            type="submit"
+            className="button button--primary button--large"
+            disabled={saving}
+          >
+            <span aria-hidden="true">✓</span>
+            {saving
+              ? "保存中..."
+              : isEdit
+                ? "更新"
+                : "登録"}
+          </button>
         </form>
-
-      </Paper>
-
-    </Box>
-
+      </section>
+    </>
   );
 }

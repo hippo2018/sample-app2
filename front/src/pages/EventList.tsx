@@ -4,24 +4,6 @@ import {
 } from "react";
 
 import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  CircularProgress,
-  IconButton,
-  Typography,
-} from "@mui/material";
-
-import {
-  Add,
-  Delete,
-  Edit,
-  Refresh,
-} from "@mui/icons-material";
-
-import {
   Link,
   useNavigate,
 } from "react-router-dom";
@@ -44,11 +26,6 @@ import type {
   Event,
 } from "../types/event";
 
-
-// --------------------------------
-// 日付表示
-// --------------------------------
-
 function formatEventDate(
   date: string
 ) {
@@ -61,15 +38,8 @@ function formatEventDate(
   );
 }
 
-
-// --------------------------------
-// コンポーネント
-// --------------------------------
-
 export default function EventList() {
-
   const navigate = useNavigate();
-
 
   const [events, setEvents] =
     useState<Event[]>([]);
@@ -80,85 +50,34 @@ export default function EventList() {
   const [error, setError] =
     useState("");
 
-
-  // --------------------------------
-  // 一覧取得
-  // --------------------------------
-
   const loadEvents = async () => {
-
     setLoading(true);
     setError("");
 
     try {
-
       const data =
         await getEvents();
 
       setEvents(data);
-
     } catch (err) {
-
       setError(
         err instanceof Error
           ? err.message
           : "予定の取得に失敗しました。"
       );
-
     } finally {
-
       setLoading(false);
-
     }
   };
 
-
-  // --------------------------------
-  // 初回読み込み
-  // --------------------------------
-
   useEffect(() => {
-
-    const loadInitialEvents =
-      async () => {
-
-        try {
-
-          const data =
-            await getEvents();
-
-          setEvents(data);
-
-        } catch (err) {
-
-          setError(
-            err instanceof Error
-              ? err.message
-              : "予定の取得に失敗しました。"
-          );
-
-        } finally {
-
-          setLoading(false);
-
-        }
-      };
-
-
-    void loadInitialEvents();
-
+    void loadEvents();
   }, []);
-
-
-  // --------------------------------
-  // 削除
-  // --------------------------------
 
   const handleDelete =
     async (
       id: number
     ) => {
-
       const result =
         window.confirm(
           "この予定を削除しますか？"
@@ -168,11 +87,8 @@ export default function EventList() {
         return;
       }
 
-
       try {
-
         await deleteEvent(id);
-
 
         setEvents(
           (current) =>
@@ -181,259 +97,110 @@ export default function EventList() {
                 event.id !== id
             )
         );
-
-
       } catch (err) {
-
         setError(
           err instanceof Error
             ? err.message
             : "削除に失敗しました。"
         );
-
       }
     };
 
-
-  // --------------------------------
-  // 画面
-  // --------------------------------
-
   return (
-
     <>
+      <div className="page-header page-header--actions">
+        <div>
+          <h2>予定一覧</h2>
+        </div>
 
-      {/* ヘッダー */}
-
-      <Box
-        sx={{
-          display: "flex",
-
-          flexDirection: {
-            xs: "column",
-            sm: "row",
-          },
-
-          justifyContent:
-            "space-between",
-
-          alignItems: {
-            xs: "stretch",
-            sm: "center",
-          },
-
-          gap: 2,
-
-          mb: 3,
-        }}
-      >
-
-        <Typography variant="h4">
-          予定一覧
-        </Typography>
-
-
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "row",
-            gap: 1,
-          }}
-        >
-
-          <Button
-            variant="outlined"
-            startIcon={<Refresh />}
+        <div className="button-row">
+          <button
+            type="button"
+            className="button button--secondary"
             onClick={() =>
               void loadEvents()
             }
             disabled={loading}
           >
+            <span aria-hidden="true">↻</span>
             更新
-          </Button>
+          </button>
 
-
-          <Button
-            component={Link}
+          <Link
+            className="button button--primary"
             to="/events/new"
-            variant="contained"
-            startIcon={<Add />}
           >
+            <span aria-hidden="true">+</span>
             予定登録
-          </Button>
-
-        </Box>
-
-      </Box>
-
-
-      {/* エラー */}
+          </Link>
+        </div>
+      </div>
 
       {error && (
-
-        <Alert
-          severity="error"
-          sx={{
-            mb: 2,
-          }}
-        >
+        <div className="alert alert--error">
           {error}
-        </Alert>
-
+        </div>
       )}
-
-
-      {/* 読み込み中 */}
 
       {loading ? (
-
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            py: 6,
-          }}
-        >
-
-          <CircularProgress />
-
-        </Box>
-
+        <div className="loading">
+          <span className="spinner" />
+        </div>
       ) : events.length === 0 ? (
-
-        <Alert severity="info">
+        <div className="alert alert--info">
           予定はありません。
-        </Alert>
-
+        </div>
       ) : (
+        <div className="event-list">
+          {events.map((event) => (
+            <article
+              className="event-card"
+              key={event.id}
+            >
+              <div className="event-card__body">
+                <h3>{event.title}</h3>
+                <p className="event-card__date">
+                  {formatEventDate(
+                    event.date
+                  )}
+                </p>
+                <p className="event-card__description">
+                  {event.description ||
+                    "説明なし"}
+                </p>
+              </div>
 
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 2,
-          }}
-        >
+              <div className="event-card__actions">
+                <button
+                  type="button"
+                  className="icon-button icon-button--primary"
+                  aria-label="編集"
+                  onClick={() =>
+                    navigate(
+                      `/events/${event.id}/edit`
+                    )
+                  }
+                >
+                  <span aria-hidden="true">✎</span>
+                </button>
 
-          {events.map(
-            (event) => (
-
-              <Card
-                key={event.id}
-              >
-
-                <CardContent>
-
-                  <Box
-                    sx={{
-                      display: "flex",
-
-                      flexDirection: {
-                        xs: "column",
-                        sm: "row",
-                      },
-
-                      justifyContent:
-                        "space-between",
-
-                      alignItems: {
-                        xs: "flex-start",
-                        sm: "center",
-                      },
-
-                      gap: 2,
-                    }}
-                  >
-
-                    {/* 内容 */}
-
-                    <Box>
-
-                      <Typography
-                        variant="h6"
-                      >
-                        {event.title}
-                      </Typography>
-
-
-                      <Typography
-                        color="primary"
-                        sx={{
-                          mt: 0.5,
-                        }}
-                      >
-                        {formatEventDate(
-                          event.date
-                        )}
-                      </Typography>
-
-
-                      <Typography
-                        color="text.secondary"
-                        sx={{
-                          mt: 1,
-                        }}
-                      >
-                        {event.description ||
-                          "説明なし"}
-                      </Typography>
-
-                    </Box>
-
-
-                    {/* 操作 */}
-
-                    <Box
-                      sx={{
-                        display: "flex",
-                        flexDirection: "row",
-                      }}
-                    >
-
-                      <IconButton
-                        color="primary"
-                        aria-label="編集"
-                        onClick={() =>
-                          navigate(
-                            `/events/${event.id}/edit`
-                          )
-                        }
-                      >
-
-                        <Edit />
-
-                      </IconButton>
-
-
-                      <IconButton
-                        color="error"
-                        aria-label="削除"
-                        onClick={() =>
-                          void handleDelete(
-                            event.id
-                          )
-                        }
-                      >
-
-                        <Delete />
-
-                      </IconButton>
-
-                    </Box>
-
-                  </Box>
-
-                </CardContent>
-
-              </Card>
-
-            )
-          )}
-
-        </Box>
-
+                <button
+                  type="button"
+                  className="icon-button icon-button--danger"
+                  aria-label="削除"
+                  onClick={() =>
+                    void handleDelete(
+                      event.id
+                    )
+                  }
+                >
+                  <span aria-hidden="true">×</span>
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
       )}
-
     </>
   );
 }

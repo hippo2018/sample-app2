@@ -4,11 +4,6 @@ import {
 } from "react";
 
 import {
-  Box,
-  CircularProgress,
-} from "@mui/material";
-
-import {
   BrowserRouter,
   Routes,
   Route,
@@ -29,15 +24,9 @@ const EventForm =
 
 function PageLoading() {
   return (
-    <Box
-      sx={{
-        display: "flex",
-        justifyContent: "center",
-        py: 6,
-      }}
-    >
-      <CircularProgress />
-    </Box>
+    <div className="loading">
+      <span className="spinner" />
+    </div>
   );
 }
 
